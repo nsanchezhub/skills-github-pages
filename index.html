@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Servicios</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input { display: block; margin-bottom: 10px; padding: 5px; width: 100%; }
+        button { padding: 10px; background: blue; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>Calculadora de Servicios</h2>
+    <label>Salario Mensual:</label>
+    <input type="number" id="salario_mensual">
+
+    <label>Seguro Social (%):</label>
+    <input type="number" id="seguro_social" value="9.75">
+
+    <label>Seguro Educativo (%):</label>
+    <input type="number" id="seguro_educativo" value="1.25">
+
+    <button onclick="calcular()">Calcular</button>
+
+    <h3>Resultados:</h3>
+    <p>Salario Anual: <span id="salario_anual"></span></p>
+    <p>Total Cargas Sociales: <span id="total_cargas"></span></p>
+    <p>Total a Pagar: <span id="total"></span></p>
+
+    <script>
+        function calcular() {
+            let salarioMensual = parseFloat(document.getElementById("salario_mensual").value) || 0;
+            let seguroSocial = parseFloat(document.getElementById("seguro_social").value) / 100;
+            let seguroEducativo = parseFloat(document.getElementById("seguro_educativo").value) / 100;
+
+            let salarioAnual = salarioMensual * 12;
+            let totalCargas = salarioMensual * (seguroSocial + seguroEducativo);
+            let total = salarioMensual + totalCargas;
+
+            document.getElementById("salario_anual").innerText = salarioAnual.toFixed(2);
+            document.getElementById("total_cargas").innerText = totalCargas.toFixed(2);
+            document.getElementById("total").innerText = total.toFixed(2);
+        }
+    </script>
+
+</body>
+</html>
