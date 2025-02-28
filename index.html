@@ -3,48 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Servicios</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        input { display: block; margin-bottom: 10px; padding: 5px; width: 100%; }
-        button { padding: 10px; background: blue; color: white; border: none; cursor: pointer; }
-    </style>
+    <title>Calculadora de Cotización</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-    <h2>Calculadora de Servicios</h2>
-    <label>Salario Mensual:</label>
-    <input type="number" id="salario_mensual">
-
-    <label>Seguro Social (%):</label>
-    <input type="number" id="seguro_social" value="9.75">
-
-    <label>Seguro Educativo (%):</label>
-    <input type="number" id="seguro_educativo" value="1.25">
-
-    <button onclick="calcular()">Calcular</button>
-
-    <h3>Resultados:</h3>
-    <p>Salario Anual: <span id="salario_anual"></span></p>
-    <p>Total Cargas Sociales: <span id="total_cargas"></span></p>
-    <p>Total a Pagar: <span id="total"></span></p>
+<body class="p-8 bg-gray-100">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-bold mb-4">Calculadora de Cotización</h2>
+        <table class="w-full border-collapse border border-gray-300">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="border border-gray-300 p-2">Puesto</th>
+                    <th class="border border-gray-300 p-2">Cantidad</th>
+                    <th class="border border-gray-300 p-2">Salario</th>
+                    <th class="border border-gray-300 p-2">Salario Mensual</th>
+                    <th class="border border-gray-300 p-2">Salario Anual</th>
+                    <th class="border border-gray-300 p-2">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr>
+                    <td class="border border-gray-300 p-2"><input type="text" class="w-full border p-1" oninput="calcular()"></td>
+                    <td class="border border-gray-300 p-2"><input type="number" min="1" value="1" class="w-full border p-1" oninput="calcular()"></td>
+                    <td class="border border-gray-300 p-2"><input type="number" min="0" value="0" class="w-full border p-1" oninput="calcular()"></td>
+                    <td class="border border-gray-300 p-2 salarioMensual text-right">0.00</td>
+                    <td class="border border-gray-300 p-2 salarioAnual text-right">0.00</td>
+                    <td class="border border-gray-300 p-2 text-center"><button onclick="eliminarFila(this)" class="bg-red-500 text-white px-2 py-1 rounded">X</button></td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="bg-gray-300 font-bold">
+                    <td colspan="3" class="border border-gray-300 p-2 text-right">Total:</td>
+                    <td id="totalMensual" class="border border-gray-300 p-2 text-right">0.00</td>
+                    <td id="totalAnual" class="border border-gray-300 p-2 text-right">0.00</td>
+                    <td class="border border-gray-300 p-2"></td>
+                </tr>
+            </tfoot>
+        </table>
+        <button onclick="agregarFila()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Agregar Puesto</button>
+        <button onclick="generarPDF()" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Generar PDF</button>
+    </div>
 
     <script>
         function calcular() {
-            let salarioMensual = parseFloat(document.getElementById("salario_mensual").value) || 0;
-            let seguroSocial = parseFloat(document.getElementById("seguro_social").value) / 100;
-            let seguroEducativo = parseFloat(document.getElementById("seguro_educativo").value) / 100;
+            let totalMensual = 0;
+            let totalAnual = 0;
+            
+            document.querySelectorAll("#tableBody tr").forEach(row => {
+                let cantidad = parseFloat(row.children[1].children[0].value) || 0;
+                let salario = parseFloat(row.children[2].children[0].value) || 0;
+                let salarioMensual = cantidad * salario;
+                let salarioAnual = salarioMensual * 12;
 
-            let salarioAnual = salarioMensual * 12;
-            let totalCargas = salarioMensual * (seguroSocial + seguroEducativo);
-            let total = salarioMensual + totalCargas;
+                row.children[3].textContent = formatNumber(salarioMensual);
+                row.children[4].textContent = formatNumber(salarioAnual);
 
-            document.getElementById("salario_anual").innerText = salarioAnual.toFixed(2);
-            document.getElementById("total_cargas").innerText = totalCargas.toFixed(2);
-            document.getElementById("total").innerText = total.toFixed(2);
+                totalMensual += salarioMensual;
+                totalAnual += salarioAnual;
+            });
+
+            document.getElementById("totalMensual").textContent = formatNumber(totalMensual);
+            document.getElementById("totalAnual").textContent = formatNumber(totalAnual);
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function agregarFila() {
+            let tableBody = document.getElementById("tableBody");
+            let newRow = document.createElement("tr");
+            newRow.innerHTML = `
+                <td class="border border-gray-300 p-2"><input type="text" class="w-full border p-1" oninput="calcular()"></td>
+                <td class="border border-gray-300 p-2"><input type="number" min="1" value="1" class="w-full border p-1" oninput="calcular()"></td>
+                <td class="border border-gray-300 p-2"><input type="number" min="0" value="0" class="w-full border p-1" oninput="calcular()"></td>
+                <td class="border border-gray-300 p-2 salarioMensual text-right">0.00</td>
+                <td class="border border-gray-300 p-2 salarioAnual text-right">0.00</td>
+                <td class="border border-gray-300 p-2 text-center"><button onclick="eliminarFila(this)" class="bg-red-500 text-white px-2 py-1 rounded">X</button></td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        function eliminarFila(button) {
+            button.parentElement.parentElement.remove();
+            calcular();
+        }
+
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            let doc = new jsPDF();
+            doc.text("Cotización de Personal", 10, 10);
+
+            let rows = [...document.querySelectorAll("#tableBody tr")].map(row => [
+                row.children[0].children[0].value || '',
+                row.children[1].children[0].value || '0',
+                `$${formatNumber(parseFloat(row.children[2].children[0].value || 0))}`,
+                `$${row.children[3].textContent || '0.00'}`,
+                `$${row.children[4].textContent || '0.00'}`
+            ]);
+
+            rows.push([
+                "Total",
+                "",
+                "",
+                `$${document.getElementById("totalMensual").textContent}`,
+                `$${document.getElementById("totalAnual").textContent}`
+            ]);
+
+            doc.autoTable({
+                head: [['Puesto', 'Cantidad', 'Salario', 'Salario Mensual', 'Salario Anual']],
+                body: rows
+            });
+
+            doc.save("cotizacion.pdf");
         }
     </script>
-
 </body>
 </html>
